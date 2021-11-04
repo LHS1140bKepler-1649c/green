@@ -120,6 +120,8 @@ def get_data(data, country, _data) -> tuple:
     years = [int(x) for i, x in enumerate(data[country]['year']) if i not in nones]
     return (years, temp_data)
 
+
+# Give the gas emmision data in tonns.
 def to_tree(gas):
     acre = 2500
     km2 = 247.10538146717*acre
