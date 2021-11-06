@@ -71,6 +71,12 @@ def get_nuclear_power_per_capita(data, country, plot=False) -> tuple:
         plt_plot(years, nuclear_per_capita, 'Nuclear Power Per Capita', 'percentage of total electricity per capita')
     return (years, nuclear_per_capita)
 
+def get_emission_land_ratio(data, country, plot=False) -> tuple:
+    years, emission_land_ratio = get_data(data, country, 'emission_land_ratio')
+    if plot:
+        plt_plot(years, emission_land_ratio, 'Emission Land(if all forest) Ratio', 'emission land ratio')
+    return (years, emission_land_ratio)
+
 def get_data_at_specific_year(data, years, year) -> float:
     index = None
     for i, y in enumerate(years):
@@ -131,7 +137,7 @@ def to_tree(gas):
 
 if __name__ == '__main__':
     
-    with open('data_greenhouse_emission.json') as f:
+    with open('green/data_green_advanced.json') as f:
         data = json.load(f)
 
     countries = ['Hungary', 'Netherlands', 'Germany', 'Denmark', 'Sweden', 'Norway', 'Finland', 'Belgium', 'Poland', 'Slovak Republic',
@@ -183,6 +189,10 @@ if __name__ == '__main__':
     em = zip(countries, codes, emissions_total)
     df_emission_total = pd.DataFrame(em, columns =['Country', 'Code', 'Emission'])
 
+    emissions_land= get_data_of_countries(data, countries, 2018, get_green_house_gas_emission)
+    em = zip(countries, codes, emissions_land)
+    df_emissions_land = pd.DataFrame(em, columns =['Country', 'Code', 'Emission Land(if all forest) Ratio'])
+
     # print(df_emission.head())
 
     # print(list(data))
@@ -192,6 +202,7 @@ if __name__ == '__main__':
     # _plot(df_emission['Code'], df_emission['Emission per Capita'], df_emission['Country'], 'Greenhouse Gas Emission per Capita', 'kt of co2 equivalent per capita')
     # _plot(df_nuclear['Code'], df_nuclear['Nuclear Power'], df_nuclear['Country'], 'Nuclear Energy Percentage of Total Electricity', 'percentage of total electricity')
     # _plot(df_emission_total['Code'], df_emission_total['Emission'], df_emission_total['Country'], 'Greenhouse Gas Emission', 'kt of co2 equivalent')
+    _plot(df_emissions_land['Code'], df_emissions_land['Emission Land(if all forest) Ratio'], df_emissions_land['Country'], 'Emission Land(if all forest) Ratio', 'emission land ratio')
 
     
 

@@ -9,6 +9,8 @@ df_gdp = pd.read_csv('gdp_const_2015_usd.csv', engine='python', error_bad_lines=
 df_population = pd.read_csv('population.csv', engine='python', error_bad_lines=False)
 df_nuclear = pd.read_csv('nuclear_energy_percent_of_total_electricity.csv', engine='python', error_bad_lines=False)
 df_municipal_waste = pd.read_csv('municipal_waste_oecd.csv', engine='python', error_bad_lines=False)
+df_land = pd.read_csv('land_area.csv', engine='python', error_bad_lines=False)
+df_forest = pd.read_csv('forest_percentage_of_land_area.csv', engine='python', error_bad_lines=False)
 countries = list()
 
 
@@ -26,7 +28,12 @@ class Country:
         self.municipal_waste_per_capita = list()
         self.nuclear = list()
         self.nuclear_per_capita = list()
+        self.emission_land_ratio = list()
         self.population = list()
+        self.land_area = list()
+        self.forest = list()
+        self.forest_size = list()
+        self.emission_forest_ratio = list()
         self.gdp = list()
         self.gdp_per_capita = list()
         self.year = set()
@@ -69,56 +76,32 @@ def create_database(df, df_population, gdp):
             country.municipal_waste_per_capita.append(None)
             country.nuclear.append(None)
             country.nuclear_per_capita.append(None)
+            country.emission_land_ratio.append(None)
             country.population.append(None)
+            country.land_area.append(None)
+            country.forest.append(None)
+            country.forest_size.append(None)
+            country.emission_forest_ratio.append(None)
             country.gdp.append(None)
             country.gdp_per_capita.append(None)
 
     for country in countries:
-        for i, row in df.iterrows():
-            if row['Country Name'] == country.name:
-                for year in country.year:
-                    index = country.year.index(year)
-                    # print(f"{row['Country Name']} at {year}: {row[str(year)]}")
-                    if not np.isnan(row[str(year)]):
-                        country.green_house_gas_emission[index] = row[str(year)]
-        for i, row in df_population.iterrows():
-            if row['Country Name'] == country.name:
-                for year in country.year:
-                    index = country.year.index(year)
-                    # print(f"{row['Country Name']} at {year}: {row[str(year)]}")
-                    if not np.isnan(row[str(year)]):
-                        country.population[index] = row[str(year)]
-        for i, row in df_gdp.iterrows():
-            if row['Country Name'] == country.name:
-                for year in country.year:
-                    index = country.year.index(year)
-                    # print(f"{row['Country Name']} at {year}: {row[str(year)]}")
-                    if not np.isnan(row[str(year)]):
-                        country.gdp[index] = row[str(year)]
+        create_data(df, country, country.green_house_gas_emission)
+        create_data(df_population, country, country.population)
+        create_data(df_gdp, country, country.gdp)
+        create_data(df_co2, country, country.co2_emission)
+        create_data(df_methane, country, country.methane_emission)
+        create_data(df_nuclear, country, country.nuclear)
+        create_data(df_land, country, country.land_area)
+        create_data(df_forest, country, country.forest)
 
-        for i, row in df_co2.iterrows():
-            if row['Country Name'] == country.name:
-                for year in country.year:
-                    index = country.year.index(year)
-                    # print(f"{row['Country Name']} at {year}: {row[str(year)]}")
-                    if not np.isnan(row[str(year)]):
-                        country.co2_emission[index] = row[str(year)]
-
-        for i, row in df_methane.iterrows():
-            if row['Country Name'] == country.name:
-                for year in country.year:
-                    index = country.year.index(year)
-                    # print(f"{row['Country Name']} at {year}: {row[str(year)]}")
-                    if not np.isnan(row[str(year)]):
-                        country.methane_emission[index] = row[str(year)]
-
-        for i, row in df_nuclear.iterrows():
-            if row['Country Name'] == country.name:
-                for year in country.year:
-                    index = country.year.index(year)
-                    # print(f"{row['Country Name']} at {year}: {row[str(year)]}")
-                    if not np.isnan(row[str(year)]):
-                        country.nuclear[index] = row[str(year)]
+        # for i, row in df_forest.iterrows():
+        #     if row['Country Name'] == country.name:
+        #         for year in country.year:
+        #             index = country.year.index(year)
+        #             # print(f"{row['Country Name']} at {year}: {row[str(year)]}")
+        #             if not np.isnan(row[str(year)]):
+        #                 country.forest[index] = row[str(year)]
     
     for country in countries:
         for year in country.year:
@@ -132,6 +115,12 @@ def create_database(df, df_population, gdp):
                 country.methane_emission_per_capita[index] = country.methane_emission[index] / country.population[index]
             if country.nuclear[index] != None and country.population[index] != None:
                 country.nuclear_per_capita[index] = country.nuclear[index] / country.population[index]
+            if country.green_house_gas_emission[index] != None and country.land_area[index] != None:
+                country.emission_land_ratio[index] = to_tree(country.green_house_gas_emission[index]*1000) / country.land_area[index]
+            if country.forest[index] != None and country.land_area[index] != None:
+                country.forest_size[index] = country.land_area[index] * (country.forest[index] / 100)
+            if country.green_house_gas_emission[index] != None and country.forest_size[index] != None and country.forest_size[index] != 0.0:
+                country.emission_forest_ratio[index] = to_tree(country.green_house_gas_emission[index]*1000) / country.forest_size[index]
 
 def add_oecd_data(df):
     for country in countries:
@@ -165,10 +154,30 @@ def create_dict(data) -> dict:
                                         'nuclear_per_capita': country.nuclear_per_capita,
                                         'municipal_waste': country.municipal_waste,
                                         'municipal_waste_per_capita': country.municipal_waste_per_capita,
+                                        'emission_land_ratio': country.emission_land_ratio,
                                         'population': country.population,
+                                        'land_area': country.land_area,
+                                        'forest': country.forest,
+                                        'forest_size': country.forest_size,
+                                        'emission_forest_ratio': country.emission_forest_ratio,
                                         'gdp': country.gdp,
                                         'year': country.year}
     return countries_dict
+
+# Give the gas emmision data in tonns.
+def to_tree(gas):
+    acre = 2500
+    km2 = 247.10538146717*acre
+    return (gas / km2)*1000
+
+def create_data(df, country, output_data):
+    for i, row in df.iterrows():
+            if row['Country Name'] == country.name:
+                for year in country.year:
+                    index = country.year.index(year)
+                    # print(f"{row['Country Name']} at {year}: {row[str(year)]}")
+                    if not np.isnan(row[str(year)]):
+                        output_data[index] = row[str(year)]
 
 
 if __name__ == '__main__':
