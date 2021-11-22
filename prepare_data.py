@@ -132,16 +132,22 @@ def create_database(df, df_population, gdp):
             if country.green_house_gas_emission[index] != None and country.forest_size[index] != None and country.forest_size[index] != 0.0:
                 country.emission_forest_ratio[index] = to_tree(country.green_house_gas_emission[index]*1000) / country.forest_size[index]
 
+
 def add_oecd_data(df):
+    numpy_header = np.array(list(df_municipal_waste))
+    numpy_df = df_municipal_waste.to_numpy()
+    _index_time = np.where(numpy_header == 'TIME')
+    _index_measure = np.where(numpy_header == 'MEASURE')
+    _index_value = np.where(numpy_header == 'Value')
     for country in countries:
-        for i, row in df.iterrows():
-            if row['LOCATION'] == country.code:
-                if row['TIME'] in country.year:
-                    index = country.year.index(row['TIME'])
-                    if row['MEASURE'] == 'THND_TONNE':
-                        country.municipal_waste[index] = row['Value']
-                    if row['MEASURE'] == 'KG_CAP':
-                        country.municipal_waste_per_capita[index] = row['Value']
+        for arr in numpy_df:
+            if country.code in arr:
+                if arr[_index_time] in country.year:
+                    index = country.year.index(arr[_index_time])
+                    if arr[_index_measure] == 'THND_TONNE':
+                        country.municipal_waste[index] = arr[_index_value][0]
+                    if arr[_index_measure] == 'KG_CAP':
+                        country.municipal_waste_per_capita[index] = arr[_index_value][0]
 
 
 def _show(ctry):
