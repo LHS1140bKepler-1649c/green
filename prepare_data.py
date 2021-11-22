@@ -86,23 +86,32 @@ def create_database(df, df_population, gdp):
             country.gdp.append(None)
             country.gdp_per_capita.append(None)
 
-    for country in countries:
-        create_data(df, country, country.green_house_gas_emission)
-        create_data(df_population, country, country.population)
-        create_data(df_gdp, country, country.gdp)
-        create_data(df_co2, country, country.co2_emission)
-        create_data(df_methane, country, country.methane_emission)
-        create_data(df_nuclear, country, country.nuclear)
-        create_data(df_land, country, country.land_area)
-        create_data(df_forest, country, country.forest)
+    numpy_df_header = np.array(list(df))
+    numpy_df = df.to_numpy()
+    numpy_df_population_header = np.array(list(df_population))
+    numpy_df_population = df_population.to_numpy()
+    numpy_df_gdp_header = np.array(list(df_gdp))
+    numpy_df_gdp = df_gdp.to_numpy()
+    numpy_df_co2_header = np.array(list(df_co2))
+    numpy_df_co2 = df_co2.to_numpy()
+    numpy_df_methane_header = np.array(list(df_methane))
+    numpy_df_methane = df_methane.to_numpy()
+    numpy_df_nuclear_header = np.array(list(df_nuclear))
+    numpy_df_nuclear = df_nuclear.to_numpy()
+    numpy_df_land_header = np.array(list(df_land))
+    numpy_df_land = df_land.to_numpy()
+    numpy_df_forest_header = np.array(list(df_forest))
+    numpy_df_forest = df_forest.to_numpy()
 
-        # for i, row in df_forest.iterrows():
-        #     if row['Country Name'] == country.name:
-        #         for year in country.year:
-        #             index = country.year.index(year)
-        #             # print(f"{row['Country Name']} at {year}: {row[str(year)]}")
-        #             if not np.isnan(row[str(year)]):
-        #                 country.forest[index] = row[str(year)]
+    for country in countries:
+        create_data(numpy_df, numpy_df_header, country, country.green_house_gas_emission)
+        create_data(numpy_df_population, numpy_df_population_header, country, country.population)
+        create_data(numpy_df_gdp, numpy_df_gdp_header, country, country.gdp)
+        create_data(numpy_df_co2, numpy_df_co2_header, country, country.co2_emission)
+        create_data(numpy_df_methane, numpy_df_methane_header, country, country.methane_emission)
+        create_data(numpy_df_nuclear, numpy_df_nuclear_header, country, country.nuclear)
+        create_data(numpy_df_land, numpy_df_land_header, country, country.land_area)
+        create_data(numpy_df_forest, numpy_df_forest_header, country, country.forest)
     
     for country in countries:
         for year in country.year:
@@ -171,23 +180,20 @@ def to_tree(gas):
     km2 = 247.10538146717*acre
     return (gas / km2)*1000
 
-def create_data(df, country, output_data):
-    columns = np.array(list(df))
-    row_data = df.loc[df['Country Name'] == country.name].to_numpy()[0]
-    row_data = np.vstack((columns, row_data))
+def create_data(np_df, np_header, country, output_data):
+    _index = np.where(np_df == country.name)[0][0]
+    _index2 = np.where(np_header == str(country.year[0]))[0]
     for year in country.year:
         index = country.year.index(year)
-        _index = np.where(row_data[0] == str(year))
-        if not np.isnan(row_data[1][_index][0]):
-            output_data[index] = row_data[1][_index][0]
+        if not np.isnan(np_df[_index][_index2][0]):
+            output_data[index] = np_df[_index][_index2][0]
+        _index2 += 1
 
 
 if __name__ == '__main__':
     create_database(df_green_house_gases, df_population, df_gdp)
     add_oecd_data(df_municipal_waste)
-    _show('Netherlands')
-    _show('Hungary')
-    _show('Germany')
+    # _show('Hungary')
     countries_to_json = create_dict(countries)
     with open('data_green_advanced_profiled.json', 'w') as f:
         json.dump(countries_to_json, f, indent = 2)
