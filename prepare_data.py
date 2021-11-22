@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import json
+from profiler import profile
 
 df_green_house_gases = pd.read_csv('greenhouse_emissions.csv', engine='python', error_bad_lines=False)
 df_co2 = pd.read_csv('co2_emissions_in_kt.csv', engine='python', error_bad_lines=False)
@@ -171,13 +172,14 @@ def to_tree(gas):
     return (gas / km2)*1000
 
 def create_data(df, country, output_data):
-    for i, row in df.iterrows():
-            if row['Country Name'] == country.name:
-                for year in country.year:
-                    index = country.year.index(year)
-                    # print(f"{row['Country Name']} at {year}: {row[str(year)]}")
-                    if not np.isnan(row[str(year)]):
-                        output_data[index] = row[str(year)]
+    columns = np.array(list(df))
+    row_data = df.loc[df['Country Name'] == country.name].to_numpy()[0]
+    row_data = np.vstack((columns, row_data))
+    for year in country.year:
+        index = country.year.index(year)
+        _index = np.where(row_data[0] == str(year))
+        if not np.isnan(row_data[1][_index][0]):
+            output_data[index] = row_data[1][_index][0]
 
 
 if __name__ == '__main__':
@@ -187,5 +189,5 @@ if __name__ == '__main__':
     _show('Hungary')
     _show('Germany')
     countries_to_json = create_dict(countries)
-    with open('data_green_advanced.json', 'w') as f:
+    with open('data_green_advanced_profiled.json', 'w') as f:
         json.dump(countries_to_json, f, indent = 2)
